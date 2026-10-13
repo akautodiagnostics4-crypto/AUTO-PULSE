@@ -28,22 +28,43 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Navigate into project folder and generate missing Gradle wrapper
+      - name: Find project directory and build APK
         run: |
-          cd AUTO-PULSE-main
+          echo "Searching for project directory..."
+          ls -la
           
-          # Create root settings.gradle if missing
+          # Automatically find the directory containing the 'app' folder
+          if [ -d "app" ]; then
+            PROJECT_DIR="."
+          elif [ -d "AUTO-PULSE-main/app" ]; then
+            PROJECT_DIR="AUTO-PULSE-main"
+          else
+            PROJECT_DIR=$(find . -maxdepth 2 -name "app" -type d | head -n 1 | xargs dirname)
+          fi
+          
+          echo "Target project directory found at: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          
+          # Ensure settings.gradle exists
           if [ ! -f settings.gradle ]; then
             echo "include ':app'" > settings.gradle
           fi
           
-          # Create root build.gradle if missing
+          # Ensure root build.gradle exists
           if [ ! -f build.gradle ]; then
-            echo "buildscript { repositories { google() mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.0' org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0' } }" > build.gradle
+            cat << 'EOF' > build.gradle
+          plugins {
+              id 'com.android.application' version '8.2.0' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+          }
+          EOF
           fi
 
-          # Generate the gradle wrapper so gradlew exists
-          gradle wrapper --gradle-version 8.5
+          # Generate Gradle wrapper if missing
+          if [ ! -f gradlew ]; then
+            echo "Generating Gradle wrapper..."
+            gradle wrapper --gradle-version 8.5
+          fi
           
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
@@ -52,6 +73,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AUTO-PULSE-APK
-          path: AUTO-PULSE-main/app/build/outputs/apk/debug/*.apk
+          path: '**/app/build/outputs/apk/debug/*.apk'
           if-no-files-found: error
           retention-days: 14
