@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22" # Updated to prevent deprecation warnings
+          node-version: "20"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -31,10 +31,10 @@ jobs:
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4 # Upgraded to v4 to fix Node 24 compatibility
 
       - name: Install project dependencies
-        run: npm install  # Changed from npm ci to support repositories without a lock file
+        run: npm install
 
       - name: Build web application
         run: npm run build
