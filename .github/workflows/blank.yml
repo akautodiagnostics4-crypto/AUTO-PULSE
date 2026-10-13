@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Configure and Build with Detailed Error Catching
+      - name: Configure, Link SDK, and Build APK
         run: |
           echo "Searching for project directory..."
           
@@ -153,7 +153,10 @@ jobs:
           }
           EOF
 
-          # 6. Generate Gradle wrapper if missing
+          # 6. Generate local.properties so Gradle finds the Android SDK location
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+          # 7. Generate Gradle wrapper if missing
           if [ ! -f gradlew ]; then
             echo "Generating Gradle wrapper..."
             gradle wrapper --gradle-version 8.5
@@ -161,14 +164,8 @@ jobs:
           
           chmod +x gradlew
           
-          # Run build and print out error stacktrace explicitly if it fails
-          ./gradlew assembleDebug --no-daemon --stacktrace || {
-              echo "=== GRADLE BUILD FAILED ==="
-              if [ -f "app/build/reports/problems/problems-report.html" ]; then
-                  cat "app/build/reports/problems/problems-report.html"
-              fi
-              exit 1
-          }
+          # Run the build
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
