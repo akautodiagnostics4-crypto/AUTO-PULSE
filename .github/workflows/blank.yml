@@ -31,22 +31,14 @@ jobs:
           items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Configure, Build, and Print Failure Diagnostics
+      - name: Scaffold Project and Build APK
         run: |
-          echo "Searching for project directory..."
-          
-          if [ -d "app" ]; then
-            PROJECT_DIR="."
-          elif [ -d "AUTO-PULSE-main/app" ]; then
-            PROJECT_DIR="AUTO-PULSE-main"
-          else
-            PROJECT_DIR=$(find . -maxdepth 2 -name "app" -type d | head -n 1 | xargs dirname)
-          fi
-          
-          echo "Target project directory found at: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          
-          # 1. Create root settings.gradle
+          # Create a clean working workspace directory for the build
+          mkdir -p workspace/app/src/main/java/com/example/autopulse
+          mkdir -p workspace/app/src/main/res/values
+          cd workspace
+
+          # 1. Root settings.gradle
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -65,8 +57,8 @@ jobs:
           rootProject.name = "AUTO-PULSE"
           include ':app'
           EOF
-          
-          # 2. Create root build.gradle
+
+          # 2. Root build.gradle
           cat << 'EOF' > build.gradle
           plugins {
               id 'com.android.application' version '8.2.0' apply false
@@ -74,8 +66,7 @@ jobs:
           }
           EOF
 
-          # 3. Create app/build.gradle
-          mkdir -p app
+          # 3. App-level build.gradle
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -92,7 +83,6 @@ jobs:
                   targetSdk 34
                   versionCode 1
                   versionName "1.0"
-
                   testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
               }
 
@@ -118,8 +108,7 @@ jobs:
           }
           EOF
 
-          # 4. Ensure AndroidManifest.xml uses standard AppCompat theme
-          mkdir -p app/src/main
+          # 4. AndroidManifest.xml
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
@@ -139,16 +128,14 @@ jobs:
           </manifest>
           EOF
 
-          # 5. Ensure required strings.xml exists
-          mkdir -p app/src/main/res/values
+          # 5. strings.xml
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">AUTO PULSE</string>
           </resources>
           EOF
 
-          # 6. Ensure MainActivity exists
-          mkdir -p app/src/main/java/com/example/autopulse
+          # 6. MainActivity.kt
           cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
           package com.example.autopulse
 
@@ -162,29 +149,17 @@ jobs:
           }
           EOF
 
-          # 7. Link Android SDK location
+          # 7. Local properties mapping the SDK path
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 8. Download and use Gradle 8.5 binary directly with full error redirection
+          # 8. Download Gradle 8.5 binary directly and execute
           echo "Downloading Gradle 8.5 binary..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
 
           export JAVA_HOME=$JAVA_HOME
-          echo "Running Gradle build..."
-          
-          # Execute with info flag directed to a log file so we can cat it on failure
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --info > gradle_build.log 2>&1 || BUILD_FAILED=true
-
-          if [ "$BUILD_FAILED" = "true" ]; then
-              echo "=========================================="
-              echo "BUILD FAILED. PRINTING LAST 100 LINES OF LOG:"
-              echo "=========================================="
-              tail -n 100 gradle_build.log
-              exit 1
-          else
-              echo "Build succeeded!"
-          fi
+          echo "Executing Gradle build..."
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
