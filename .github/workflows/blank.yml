@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Configure, Link SDK, and Build APK
+      - name: Generate Project Files, Gradle Wrapper, and Build APK
         run: |
           echo "Searching for project directory..."
           
@@ -153,18 +153,20 @@ jobs:
           }
           EOF
 
-          # 6. Generate local.properties so Gradle finds the Android SDK location
+          # 6. Link Android SDK location
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 7. Generate Gradle wrapper if missing
+          # 7. Download Gradle 8.5 binary and generate the wrapper properly
           if [ ! -f gradlew ]; then
-            echo "Generating Gradle wrapper..."
-            gradle wrapper --gradle-version 8.5
+            echo "Downloading and generating Gradle 8.5 wrapper..."
+            wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+            unzip -q gradle-8.5-bin.zip
+            ./gradle-8.5/bin/gradle wrapper --gradle-version 8.5
           fi
           
           chmod +x gradlew
           
-          # Run the build
+          # 8. Compile the Debug APK
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
