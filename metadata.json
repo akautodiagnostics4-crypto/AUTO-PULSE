@@ -1,0 +1,6 @@
+{
+  "name": "Pollachi AutoGo",
+  "description": "Pollachi's on-demand local auto and cab ride app for riders and auto drivers with real-time tracking, payments, and ratings",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

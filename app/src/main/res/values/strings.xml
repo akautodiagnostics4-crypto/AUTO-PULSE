@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Pollachi AutoGo</string>
+    <string name="tagline">Pollachi\'s Local Auto App | பொள்ளாச்சி ஆட்டோ</string>
+    <string name="mode_passenger">Rider (பயணி)</string>
+    <string name="mode_driver">Auto Driver (ஓட்டுநர்)</string>
+    <string name="book_ride">Book Auto (ஆட்டோ புக் செய்)</string>
+    <string name="ride_auto_standard">Pollachi Auto</string>
+    <string name="ride_auto_electric">Green EV Auto</string>
+    <string name="ride_cab_mini">Town Cab Mini</string>
+    <string name="ride_bike_taxi">Bike Taxi</string>
+    <string name="payment_upi">UPI Payment (GPay/PhonePe)</string>
+    <string name="payment_card">Credit / Debit Card</string>
+    <string name="payment_wallet">AutoGo Wallet</string>
+    <string name="payment_cash">Cash on Arrival</string>
+</resources>
