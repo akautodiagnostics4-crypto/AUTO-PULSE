@@ -10,6 +10,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # This tells GitHub Actions to run everything inside the AUTO-PULSE-main folder
+    defaults:
+      run:
+        working-directory: AUTO-PULSE-main
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -30,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: AUTO-PULSE-main/app/build/outputs/apk/debug/app-debug.apk
