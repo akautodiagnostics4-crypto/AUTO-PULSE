@@ -1,11 +1,100 @@
-    - name: Install dependencies
-      working-directory: ./path-to-web
-      run: npm ci
+name: Build APK
 
-    - name: Install tailwind
-      working-directory: ./path-to-web
-      run: npm install @tailwindcss/vite tailwindcss
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
-    - name: Build web
-      working-directory: ./path-to-web
-      run: npm run build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Show top-level files (debug)
+        run: |
+          echo "Top-level files:"
+          ls -la
+
+      - name: Detect web directory (where package.json lives)
+        id: detect-web
+        run: |
+          p=$(find . -maxdepth 4 -type f -name package.json -print -quit || true)
+          if [ -z "$p" ]; then
+            echo "No package.json found within depth 4. Defaulting to repo root."
+            echo "web_dir=." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          dir=$(dirname "$p")
+          echo "Found package.json at: $p (web_dir=$dir)"
+          echo "web_dir=$dir" >> $GITHUB_OUTPUT
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Set up Java (for Android Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install web dependencies
+        working-directory: ${{ steps.detect-web.outputs.web_dir }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Tailwind (if needed) and build web
+        working-directory: ${{ steps.detect-web.outputs.web_dir }}
+        run: |
+          # install optional build dependencies (safe to run even if already installed)
+          npm install @tailwindcss/vite tailwindcss --no-audit --no-fund || true
+          npm run build
+
+      - name: Capacitor setup, add/copy Android
+        working-directory: ${{ steps.detect-web.outputs.web_dir }}
+        run: |
+          # Install Capacitor deps (no-op if already in package.json)
+          npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund || true
+
+          # Only init/add android if not present
+          if [ ! -d android ] && [ ! -f android/gradlew ]; then
+            echo "Initializing Capacitor and adding Android..."
+            npx cap init AutoPulse com.pollachi.autopulse --web-dir=dist || true
+            npx cap add android || true
+          else
+            echo "Android platform already exists; skipping init/add."
+          fi
+
+          # Copy web assets into Android project
+          npx cap copy || true
+
+      - name: Build Android APK
+        run: |
+          # Prefer android folder under web_dir, fall back to repo-root/android
+          if [ -d "${{ steps.detect-web.outputs.web_dir }}/android" ]; then
+            cd "${{ steps.detect-web.outputs.web_dir }}/android"
+          else
+            cd android || (echo "No android directory found, skipping Android build" && exit 0)
+          fi
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pollachi-AutoPulse-APK
+          path: |
+            ${{ steps.detect-web.outputs.web_dir }}/android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk
