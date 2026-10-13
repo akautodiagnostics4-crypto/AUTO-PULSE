@@ -31,7 +31,7 @@ jobs:
           items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Configure, Build, and Print Output on Failure
+      - name: Configure, Build, and Print Full Logs on Failure
         run: |
           echo "Searching for project directory..."
           
@@ -118,7 +118,7 @@ jobs:
           }
           EOF
 
-          # 4. Ensure AndroidManifest.xml exists
+          # 4. Ensure AndroidManifest.xml uses standard AppCompat theme
           mkdir -p app/src/main
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -126,7 +126,7 @@ jobs:
                   android:allowBackup="true"
                   android:label="AUTO PULSE"
                   android:supportsRtl="true"
-                  android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
@@ -173,10 +173,8 @@ jobs:
           export JAVA_HOME=$JAVA_HOME
           echo "Running Gradle build..."
           
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace || {
-              echo "=== BUILD FAILED ==="
-              exit 1
-          }
+          # Run build and stream output directly so any error prints to the console
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
