@@ -21,26 +21,53 @@ jobs:
           echo "Top-level files:"
           ls -la
 
-      - name: Detect web directory (where package.json lives)
+      - name: Detect web directory and lockfile
         id: detect-web
         run: |
-          p=$(find . -maxdepth 4 -type f -name package.json -print -quit || true)
-          if [ -z "$p" ]; then
-            echo "No package.json found within depth 4. Defaulting to repo root."
+          # Find package.json (search depth 6)
+          pkg=$(find . -maxdepth 6 -type f -name package.json -print -quit || true)
+          if [ -z "$pkg" ]; then
+            echo "No package.json found within depth 6; defaulting to repo root."
             echo "web_dir=." >> $GITHUB_OUTPUT
+            echo "lockfile_found=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          dir=$(dirname "$p")
-          echo "Found package.json at: $p (web_dir=$dir)"
+          dir=$(dirname "$pkg")
+          echo "Found package.json at: $pkg (web_dir=$dir)"
           echo "web_dir=$dir" >> $GITHUB_OUTPUT
 
-      - name: Set up Node.js
+          # Look for common lockfiles in the same directory
+          if [ -f "$dir/package-lock.json" ]; then
+            echo "lockfile_found=true" >> $GITHUB_OUTPUT
+            echo "lockfile_path=$dir/package-lock.json" >> $GITHUB_OUTPUT
+            echo "lockfile_type=package-lock.json" >> $GITHUB_OUTPUT
+          elif [ -f "$dir/npm-shrinkwrap.json" ]; then
+            echo "lockfile_found=true" >> $GITHUB_OUTPUT
+            echo "lockfile_path=$dir/npm-shrinkwrap.json" >> $GITHUB_OUTPUT
+            echo "lockfile_type=npm-shrinkwrap.json" >> $GITHUB_OUTPUT
+          elif [ -f "$dir/yarn.lock" ]; then
+            echo "lockfile_found=true" >> $GITHUB_OUTPUT
+            echo "lockfile_path=$dir/yarn.lock" >> $GITHUB_OUTPUT
+            echo "lockfile_type=yarn.lock" >> $GITHUB_OUTPUT
+          else
+            echo "lockfile_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js (with cache if lockfile present)
+        if: steps.detect-web.outputs.lockfile_found == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: ${{ steps.detect-web.outputs.lockfile_path }}
 
-      - name: Set up Java (for Android Gradle)
+      - name: Setup Node.js (no cache when no lockfile)
+        if: steps.detect-web.outputs.lockfile_found != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java (for Android Gradle)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -49,49 +76,51 @@ jobs:
       - name: Install web dependencies
         working-directory: ${{ steps.detect-web.outputs.web_dir }}
         run: |
-          if [ -f package-lock.json ]; then
+          echo "Working directory: $PWD -> ${GITHUB_WORKSPACE}/${{ steps.detect-web.outputs.web_dir }}"
+          # Use npm ci if package-lock exists, otherwise npm install
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "Lockfile present; running npm ci"
             npm ci
           else
+            echo "No lockfile present; running npm install"
             npm install
           fi
 
-      - name: Install Tailwind (if needed) and build web
+      - name: Install Tailwind (optional) and build web
         working-directory: ${{ steps.detect-web.outputs.web_dir }}
         run: |
-          # install optional build dependencies (safe to run even if already installed)
+          # safe to try install these; if they are already declared it's a noop
           npm install @tailwindcss/vite tailwindcss --no-audit --no-fund || true
           npm run build
 
       - name: Capacitor setup, add/copy Android
         working-directory: ${{ steps.detect-web.outputs.web_dir }}
         run: |
-          # Install Capacitor deps (no-op if already in package.json)
           npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund || true
 
-          # Only init/add android if not present
           if [ ! -d android ] && [ ! -f android/gradlew ]; then
             echo "Initializing Capacitor and adding Android..."
             npx cap init AutoPulse com.pollachi.autopulse --web-dir=dist || true
             npx cap add android || true
           else
-            echo "Android platform already exists; skipping init/add."
+            echo "Android platform present; skipping init/add."
           fi
 
-          # Copy web assets into Android project
           npx cap copy || true
 
       - name: Build Android APK
         run: |
-          # Prefer android folder under web_dir, fall back to repo-root/android
-          if [ -d "${{ steps.detect-web.outputs.web_dir }}/android" ]; then
-            cd "${{ steps.detect-web.outputs.web_dir }}/android"
+          # Prefer android under web_dir, fallback to repo-root/android
+          WEB_DIR="${{ steps.detect-web.outputs.web_dir }}"
+          if [ -d "$WEB_DIR/android" ]; then
+            cd "$WEB_DIR/android"
           else
-            cd android || (echo "No android directory found, skipping Android build" && exit 0)
+            cd android || (echo "No android folder found; skipping Android build" && exit 0)
           fi
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK artifact
+      - name: Upload APK artifact (if present)
         uses: actions/upload-artifact@v4
         with:
           name: Pollachi-AutoPulse-APK
