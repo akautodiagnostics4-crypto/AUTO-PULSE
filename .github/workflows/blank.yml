@@ -15,11 +15,6 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
 
-    # This tells GitHub Actions to execute everything inside your project subfolder
-    defaults:
-      run:
-        working-directory: AUTO-PULSE-main
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -52,7 +47,7 @@ jobs:
         run: npx cap sync android
 
       - name: Build debug APK
-        working-directory: AUTO-PULSE-main/android
+        working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
@@ -61,6 +56,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AUTO-PULSE-APK
-          path: AUTO-PULSE-main/android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
