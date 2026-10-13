@@ -25,12 +25,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK with Platform 34
         uses: android-actions/setup-android@v4
         with:
+          items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Configure, Build, and Dump Error Logs on Failure
+      - name: Configure, Build, and Print Output on Failure
         run: |
           echo "Searching for project directory..."
           
@@ -170,21 +171,12 @@ jobs:
           unzip -q gradle-8.5-bin.zip
 
           export JAVA_HOME=$JAVA_HOME
-          echo "Running Gradle build and capturing output..."
+          echo "Running Gradle build..."
           
-          # Run build and save all output to build_output.log
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace > build_output.log 2>&1
-          BUILD_EXIT_CODE=$?
-
-          if [ $BUILD_EXIT_CODE -ne 0 ]; then
-              echo "=========================================="
-              echo "BUILD FAILED. FULL GRADLE OUTPUT:"
-              echo "=========================================="
-              cat build_output.log
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace || {
+              echo "=== BUILD FAILED ==="
               exit 1
-          else
-              echo "Build successful!"
-          fi
+          }
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
