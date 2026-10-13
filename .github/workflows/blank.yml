@@ -1,26 +1,42 @@
-name: Build APK
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - run: npm install
-      - run: npm install @tailwindcss/vite tailwindcss
-      - run: npm run build
-      - run: npm install @capacitor/core @capacitor/cli @capacitor/android
-      - run: npx cap init AutoPulse com.pollachi.autopulse --web-dir=dist
-      - run: npx cap add android
-      - run: npx cap copy
-      - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Pollachi-AutoPulse-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+# debug + corrected npm / capacitor steps (insert in place of the current npm/capacitor runs)
+      - name: Show repo layout
+        run: |
+          echo "Top-level:"
+          ls -la
+          echo "Look for package.json (search depth 4):"
+          find . -maxdepth 4 -type f -name package.json -print || true
+
+      - name: Install dependencies
+        working-directory: ./path-to-web
+        run: npm ci
+
+      - name: Install tailwind
+        working-directory: ./path-to-web
+        run: npm install @tailwindcss/vite tailwindcss --no-audit --no-fund
+
+      - name: Build web
+        working-directory: ./path-to-web
+        run: npm run build
+
+      - name: Install capacitor deps
+        working-directory: ./path-to-web
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund
+
+      - name: Capacitor init
+        working-directory: ./path-to-web
+        run: npx cap init AutoPulse com.pollachi.autopulse --web-dir=dist
+
+      - name: Capacitor add android
+        working-directory: ./path-to-web
+        run: npx cap add android
+
+      - name: Capacitor copy
+        working-directory: ./path-to-web
+        run: npx cap copy
+
+      - name: Build Android
+        run: |
+          # adjust path if the Android project is created elsewhere
+          cd path-to-web/android || cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
