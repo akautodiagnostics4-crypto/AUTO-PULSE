@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Configure Project, Print Files, and Build
+      - name: Configure and Build with Stacktrace
         run: |
           echo "Searching for project directory..."
           
@@ -167,16 +167,8 @@ jobs:
           
           chmod +x gradlew
           
-          echo "=== PRINTING SETTINGS.GRADLE ==="
-          cat settings.gradle
-          echo "=== PRINTING BUILD.GRADLE ==="
-          cat build.gradle
-          echo "=== PRINTING APP/BUILD.GRADLE ==="
-          cat app/build.gradle
-          echo "================================"
-
-          # Run build with full debug info so we can pinpoint the failure
-          ./gradlew assembleDebug --no-daemon --debug || exit 1
+          # Run build with --stacktrace to print the clean error reason at the bottom
+          ./gradlew assembleDebug --no-daemon --stacktrace || exit 1
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
