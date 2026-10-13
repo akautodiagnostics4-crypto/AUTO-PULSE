@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Generate Files and Build Directly with Gradle 8.5
+      - name: Generate Complete Project Structure and Build
         run: |
           echo "Searching for project directory..."
           
@@ -138,7 +138,15 @@ jobs:
           </manifest>
           EOF
 
-          # 5. Ensure MainActivity exists
+          # 5. Ensure required resource files exist (strings.xml prevents resource compilation failures)
+          mkdir -p app/src/main/res/values
+          cat << 'EOF' > app/src/main/res/values/strings.xml
+          <resources>
+              <string name="app_name">AUTO PULSE</string>
+          </resources>
+          EOF
+
+          # 6. Ensure MainActivity exists
           mkdir -p app/src/main/java/com/example/autopulse
           cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
           package com.example.autopulse
@@ -153,16 +161,27 @@ jobs:
           }
           EOF
 
-          # 6. Link Android SDK location
+          # 7. Link Android SDK location
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 7. Download and use Gradle 8.5 binary directly (bypassing wrapper generation)
+          # 8. Download and use Gradle 8.5 binary directly with explicit Java home
           echo "Downloading Gradle 8.5 binary..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
 
-          echo "Running Gradle build directly..."
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
+          export JAVA_HOME=$JAVA_HOME
+          echo "Running Gradle build..."
+          
+          # Run build and print out error details if it fails
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace || {
+              echo "=========================================="
+              echo "BUILD FAILED. Printing recent build logs:"
+              echo "=========================================="
+              if [ -f "app/build/reports/problems/problems-report.html" ]; then
+                  cat "app/build/reports/problems/problems-report.html"
+              fi
+              exit 1
+          }
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
