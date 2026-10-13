@@ -1,42 +1,11 @@
-# debug + corrected npm / capacitor steps (insert in place of the current npm/capacitor runs)
-      - name: Show repo layout
-        run: |
-          echo "Top-level:"
-          ls -la
-          echo "Look for package.json (search depth 4):"
-          find . -maxdepth 4 -type f -name package.json -print || true
+    - name: Install dependencies
+      working-directory: ./path-to-web
+      run: npm ci
 
-      - name: Install dependencies
-        working-directory: ./path-to-web
-        run: npm ci
+    - name: Install tailwind
+      working-directory: ./path-to-web
+      run: npm install @tailwindcss/vite tailwindcss
 
-      - name: Install tailwind
-        working-directory: ./path-to-web
-        run: npm install @tailwindcss/vite tailwindcss --no-audit --no-fund
-
-      - name: Build web
-        working-directory: ./path-to-web
-        run: npm run build
-
-      - name: Install capacitor deps
-        working-directory: ./path-to-web
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund
-
-      - name: Capacitor init
-        working-directory: ./path-to-web
-        run: npx cap init AutoPulse com.pollachi.autopulse --web-dir=dist
-
-      - name: Capacitor add android
-        working-directory: ./path-to-web
-        run: npx cap add android
-
-      - name: Capacitor copy
-        working-directory: ./path-to-web
-        run: npx cap copy
-
-      - name: Build Android
-        run: |
-          # adjust path if the Android project is created elsewhere
-          cd path-to-web/android || cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+    - name: Build web
+      working-directory: ./path-to-web
+      run: npm run build
