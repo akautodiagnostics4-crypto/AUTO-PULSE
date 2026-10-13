@@ -27,8 +27,11 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          # Automatically accept Android SDK licenses to prevent silent build failures
+          license-accepted: true
 
-      - name: Ensure Complete Android Project Structure and Build
+      - name: Configure Project and Build APK
         run: |
           echo "Searching for project directory..."
           
@@ -140,7 +143,7 @@ jobs:
           EOF
           fi
 
-          # 5. Ensure a basic MainActivity exists if missing
+          # 5. Ensure MainActivity exists
           if [ ! -f "app/src/main/java/com/example/autopulse/MainActivity.kt" ]; then
             mkdir -p app/src/main/java/com/example/autopulse
             cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
@@ -164,8 +167,9 @@ jobs:
           fi
           
           chmod +x gradlew
-          # Using --info to display full logs if anything fails
-          ./gradlew assembleDebug --no-daemon --info
+          
+          # Run build and capture error output cleanly with stacktrace if it fails
+          ./gradlew assembleDebug --no-daemon --stacktrace || exit 1
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
