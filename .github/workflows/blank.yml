@@ -28,10 +28,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          # Automatically accept Android SDK licenses to prevent silent build failures
           license-accepted: true
 
-      - name: Configure Project and Build APK
+      - name: Configure Project, Print Files, and Build
         run: |
           echo "Searching for project directory..."
           
@@ -168,8 +167,16 @@ jobs:
           
           chmod +x gradlew
           
-          # Run build and capture error output cleanly with stacktrace if it fails
-          ./gradlew assembleDebug --no-daemon --stacktrace || exit 1
+          echo "=== PRINTING SETTINGS.GRADLE ==="
+          cat settings.gradle
+          echo "=== PRINTING BUILD.GRADLE ==="
+          cat build.gradle
+          echo "=== PRINTING APP/BUILD.GRADLE ==="
+          cat app/build.gradle
+          echo "================================"
+
+          # Run build with full debug info so we can pinpoint the failure
+          ./gradlew assembleDebug --no-daemon --debug || exit 1
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
