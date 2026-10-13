@@ -31,7 +31,7 @@ jobs:
           items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Configure, Build, and Print Full Logs on Failure
+      - name: Configure, Build, and Print Failure Diagnostics
         run: |
           echo "Searching for project directory..."
           
@@ -165,7 +165,7 @@ jobs:
           # 7. Link Android SDK location
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 8. Download and use Gradle 8.5 binary directly
+          # 8. Download and use Gradle 8.5 binary directly with full error redirection
           echo "Downloading Gradle 8.5 binary..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
@@ -173,8 +173,18 @@ jobs:
           export JAVA_HOME=$JAVA_HOME
           echo "Running Gradle build..."
           
-          # Run build and stream output directly so any error prints to the console
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
+          # Execute with info flag directed to a log file so we can cat it on failure
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --info > gradle_build.log 2>&1 || BUILD_FAILED=true
+
+          if [ "$BUILD_FAILED" = "true" ]; then
+              echo "=========================================="
+              echo "BUILD FAILED. PRINTING LAST 100 LINES OF LOG:"
+              echo "=========================================="
+              tail -n 100 gradle_build.log
+              exit 1
+          else
+              echo "Build succeeded!"
+          fi
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
