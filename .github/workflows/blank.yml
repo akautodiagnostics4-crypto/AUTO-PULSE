@@ -15,16 +15,16 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
 
+    # This ensures all commands run inside your project folder where build.gradle and gradlew live
+    defaults:
+      run:
+        working-directory: AUTO-PULSE-main
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Setup Java
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,29 +33,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Install project dependencies
-        run: npm install
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Build web application
-        run: npm run build
-
-      - name: Add Capacitor Android platform (if missing)
-        run: npx cap add android
-        continue-on-error: true
-
-      - name: Sync Capacitor Android platform
-        run: npx cap sync android
-
-      - name: Build debug APK
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+      - name: Build debug APK with Gradle
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
         with:
           name: AUTO-PULSE-APK
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: AUTO-PULSE-main/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
