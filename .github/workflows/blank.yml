@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Generate Complete Project Structure and Build
+      - name: Configure, Build, and Dump Error Logs on Failure
         run: |
           echo "Searching for project directory..."
           
@@ -138,7 +138,7 @@ jobs:
           </manifest>
           EOF
 
-          # 5. Ensure required resource files exist (strings.xml prevents resource compilation failures)
+          # 5. Ensure required strings.xml exists
           mkdir -p app/src/main/res/values
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
@@ -164,24 +164,27 @@ jobs:
           # 7. Link Android SDK location
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 8. Download and use Gradle 8.5 binary directly with explicit Java home
+          # 8. Download and use Gradle 8.5 binary directly
           echo "Downloading Gradle 8.5 binary..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
 
           export JAVA_HOME=$JAVA_HOME
-          echo "Running Gradle build..."
+          echo "Running Gradle build and capturing output..."
           
-          # Run build and print out error details if it fails
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace || {
+          # Run build and save all output to build_output.log
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace > build_output.log 2>&1
+          BUILD_EXIT_CODE=$?
+
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
               echo "=========================================="
-              echo "BUILD FAILED. Printing recent build logs:"
+              echo "BUILD FAILED. FULL GRADLE OUTPUT:"
               echo "=========================================="
-              if [ -f "app/build/reports/problems/problems-report.html" ]; then
-                  cat "app/build/reports/problems/problems-report.html"
-              fi
+              cat build_output.log
               exit 1
-          }
+          else
+              echo "Build successful!"
+          fi
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
