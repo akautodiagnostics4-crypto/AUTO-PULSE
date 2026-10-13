@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Configure, Build, and Output Logs on Failure
+      - name: Configure and Build with Detailed Error Catching
         run: |
           echo "Searching for project directory..."
           
@@ -117,7 +117,7 @@ jobs:
           }
           EOF
 
-          # 4. Ensure AndroidManifest.xml uses Material3 theme
+          # 4. Ensure AndroidManifest.xml exists
           mkdir -p app/src/main
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -161,8 +161,14 @@ jobs:
           
           chmod +x gradlew
           
-          # Run build and output error logs if it fails
-          ./gradlew assembleDebug --no-daemon --info || { echo "BUILD FAILED. Printing logs..."; exit 1; }
+          # Run build and print out error stacktrace explicitly if it fails
+          ./gradlew assembleDebug --no-daemon --stacktrace || {
+              echo "=== GRADLE BUILD FAILED ==="
+              if [ -f "app/build/reports/problems/problems-report.html" ]; then
+                  cat "app/build/reports/problems/problems-report.html"
+              fi
+              exit 1
+          }
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
