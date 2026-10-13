@@ -20,14 +20,13 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    # CHANGE THIS to the actual folder name where build.gradle lives (e.g., ./AUTO-PULSE-main)
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-      working-directory: ./AUTO-PULSE-main  # <--- Update this folder name
+      working-directory: AUTO-PULSE-main
 
     - name: Build Debug APK with Gradle
       run: ./gradlew assembleDebug
-      working-directory: ./AUTO-PULSE-main  # <--- Update this folder name
+      working-directory: AUTO-PULSE-main
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
