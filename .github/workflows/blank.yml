@@ -63,7 +63,7 @@ jobs:
           include ':app'
           EOF
           
-          # 2. Create root build.gradle with compatible versions (AGP 8.2.0 + Kotlin 1.9.24)
+          # 2. Create root build.gradle
           cat << 'EOF' > build.gradle
           plugins {
               id 'com.android.application' version '8.2.0' apply false
@@ -117,14 +117,15 @@ jobs:
           EOF
           fi
 
-          # 4. Generate Gradle wrapper if missing (using Gradle 8.5)
+          # 4. Generate Gradle wrapper if missing
           if [ ! -f gradlew ]; then
             echo "Generating Gradle wrapper..."
             gradle wrapper --gradle-version 8.5
           fi
           
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          # Added --stacktrace so we can see the exact error message in the logs
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
