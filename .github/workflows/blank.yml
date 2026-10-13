@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Generate Project Files, Gradle Wrapper, and Build APK
+      - name: Generate Files and Build Directly with Gradle 8.5
         run: |
           echo "Searching for project directory..."
           
@@ -156,18 +156,13 @@ jobs:
           # 6. Link Android SDK location
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 7. Download Gradle 8.5 binary and generate the wrapper properly
-          if [ ! -f gradlew ]; then
-            echo "Downloading and generating Gradle 8.5 wrapper..."
-            wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
-            unzip -q gradle-8.5-bin.zip
-            ./gradle-8.5/bin/gradle wrapper --gradle-version 8.5
-          fi
-          
-          chmod +x gradlew
-          
-          # 8. Compile the Debug APK
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          # 7. Download and use Gradle 8.5 binary directly (bypassing wrapper generation)
+          echo "Downloading Gradle 8.5 binary..."
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+
+          echo "Running Gradle build directly..."
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
