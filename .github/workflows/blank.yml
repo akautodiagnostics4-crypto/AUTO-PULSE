@@ -15,11 +15,6 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
 
-    # This ensures all commands run inside your project folder where build.gradle and gradlew live
-    defaults:
-      run:
-        working-directory: AUTO-PULSE-main
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -43,6 +38,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AUTO-PULSE-APK
-          path: AUTO-PULSE-main/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
