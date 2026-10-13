@@ -31,19 +31,14 @@ jobs:
           items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Scaffold Project and Build with Error Logging
+      - name: Scaffold Project and Build APK
         run: |
-          # Print environment diagnostics
-          echo "Java Home: $JAVA_HOME"
-          java -version
-          echo "Android Home: $ANDROID_HOME"
-
-          # Create a clean working workspace directory for the build
+          # Create a clean working workspace directory
           mkdir -p workspace/app/src/main/java/com/example/autopulse
           mkdir -p workspace/app/src/main/res/values
           cd workspace
 
-          # 1. Root settings.gradle
+          # 1. Root settings.gradle with explicit plugin management
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -63,11 +58,11 @@ jobs:
           include ':app'
           EOF
 
-          # 2. Root build.gradle
+          # 2. Root build.gradle (Downgraded AGP to 8.1.4 for robust headless CI execution)
           cat << 'EOF' > build.gradle
           plugins {
-              id 'com.android.application' version '8.2.0' apply false
-              id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+              id 'com.android.application' version '8.1.4' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.20' apply false
           }
           EOF
 
@@ -157,24 +152,16 @@ jobs:
           # 7. Local properties mapping the SDK path
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 8. Download Gradle 8.5 binary directly
-          echo "Downloading Gradle 8.5 binary..."
-          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
+          # 8. Download Gradle 8.3 binary (fully compatible with AGP 8.1.4)
+          echo "Downloading Gradle 8.3 binary..."
+          wget -q https://services.gradle.org/distributions/gradle-8.3-bin.zip
+          unzip -q gradle-8.3-bin.zip
 
-          # 9. Execute build and capture log output
-          echo "Executing Gradle build..."
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace > build_output.log 2>&1 || BUILD_FAILED=true
-
-          if [ "$BUILD_FAILED" = "true" ]; then
-              echo "=================================================="
-              echo "BUILD FAILED. PRINTING FULL GRADLE ERROR LOG:"
-              echo "=================================================="
-              cat build_output.log
-              exit 1
-          else
-              echo "Build succeeded successfully!"
-          fi
+          export JAVA_HOME=$JAVA_HOME
+          echo "Executing Gradle build with stacktrace..."
+          
+          # Run build and stream output directly to console with stacktrace enabled
+          ./gradle-8.3/bin/gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
