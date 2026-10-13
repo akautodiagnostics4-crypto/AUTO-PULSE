@@ -30,7 +30,7 @@ jobs:
         with:
           license-accepted: true
 
-      - name: Configure and Build with Stacktrace
+      - name: Configure, Build, and Output Logs on Failure
         run: |
           echo "Searching for project directory..."
           
@@ -117,18 +117,15 @@ jobs:
           }
           EOF
 
-          # 4. Ensure AndroidManifest.xml exists
+          # 4. Ensure AndroidManifest.xml uses Material3 theme
           mkdir -p app/src/main
-          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
-            cat << 'EOF' > app/src/main/AndroidManifest.xml
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
                   android:allowBackup="true"
-                  android:icon="@mipmap/ic_launcher"
                   android:label="AUTO PULSE"
-                  android:roundIcon="@mipmap/ic_launcher_round"
                   android:supportsRtl="true"
-                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+                  android:theme="@style/Theme.Material3.DayNight.NoActionBar">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
@@ -140,12 +137,10 @@ jobs:
               </application>
           </manifest>
           EOF
-          fi
 
           # 5. Ensure MainActivity exists
-          if [ ! -f "app/src/main/java/com/example/autopulse/MainActivity.kt" ]; then
-            mkdir -p app/src/main/java/com/example/autopulse
-            cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
+          mkdir -p app/src/main/java/com/example/autopulse
+          cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
           package com.example.autopulse
 
           import android.os.Bundle
@@ -157,7 +152,6 @@ jobs:
               }
           }
           EOF
-          fi
 
           # 6. Generate Gradle wrapper if missing
           if [ ! -f gradlew ]; then
@@ -167,8 +161,8 @@ jobs:
           
           chmod +x gradlew
           
-          # Run build with --stacktrace to print the clean error reason at the bottom
-          ./gradlew assembleDebug --no-daemon --stacktrace || exit 1
+          # Run build and output error logs if it fails
+          ./gradlew assembleDebug --no-daemon --info || { echo "BUILD FAILED. Printing logs..."; exit 1; }
 
       - name: Upload AUTO PULSE APK
         uses: actions/upload-artifact@v4
