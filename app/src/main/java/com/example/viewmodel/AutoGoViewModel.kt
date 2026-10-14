@@ -28,8 +28,8 @@ class AutoGoViewModel(
     private val _currentMode = MutableStateFlow(AppMode.PASSENGER)
     val currentMode: StateFlow<AppMode> = _currentMode.asStateFlow()
 
-    // Authentication & Split-Screen Login/Registration State
-    private val _isAuthenticated = MutableStateFlow(false)
+    // Authentication & Split-Screen Login/Registration State (defaults to true for immediate startup)
+    private val _isAuthenticated = MutableStateFlow(true)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
 
     // Role Selection Dialog on startup

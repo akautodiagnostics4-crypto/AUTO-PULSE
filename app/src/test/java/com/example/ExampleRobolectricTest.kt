@@ -87,7 +87,12 @@ class ExampleRobolectricTest {
   @Test
   fun `verify split auth screen rider credential collection and login`() {
     val viewModel = com.example.viewmodel.AutoGoViewModel()
-    // Initially unauthenticated -> lands on SplitAuthScreen
+    // Defaults to authenticated Rider mode for instant app usability
+    assertEquals(true, viewModel.isAuthenticated.value)
+    assertEquals(com.example.model.AppMode.PASSENGER, viewModel.currentMode.value)
+
+    // User can switch account / logout to open split auth screen
+    viewModel.logout()
     assertEquals(false, viewModel.isAuthenticated.value)
 
     viewModel.loginAsRider(

@@ -1,25 +1,31 @@
-# AutoGo: Local Auto & On-Demand Ride Hailing App
+# Pollachi AutoGo: App Diagnostic, Startup Fix & View Switcher Plan
 
-An on-demand local urban transport Android app featuring real-time driver tracking, a mixed fleet (Auto Rickshaw, Electric Auto, Cab Mini, Bike Taxi), seamless multi-method payments (UPI, Card, Wallet, Cash), trip OTP security, a user rating system, and a dedicated Driver Console view.
+Comprehensive diagnostic and implementation plan to address the "app not working" report by ensuring default startup lands directly on the functional, interactive Rider booking & live map screen, providing an instant one-tap view switcher to Driver Console, and harmonizing GitHub Actions build workflows with the native Android Gradle project.
 
 ***
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural decisions incorporate your selections from Phase 1:
-> - **Fleet Coverage**: Full support for mixed urban mobility options: **Local Auto Rickshaws** (Standard & Eco Electric), **Cabs / Mini Taxis**, and **Bike Taxis**, each with distinct pricing models, capacities, and ETAs.
-> - **Payment Spectrum**: Flexible checkout supporting **UPI (Google Pay, PhonePe, QR)**, **Credit/Debit Cards**, **In-App Digital Wallet**, and **Cash to Driver** upon arrival.
-> - **Dual Operational Perspectives**: Seamless dual-mode architecture featuring a rich **Passenger Booking Experience** alongside a full **Driver Partner Console** (dispatch radar, incoming request alerts with acceptance timer, OTP verification, live navigation simulation, and daily earnings dashboard).
-> - **Live Interactive Map Engine**: A high-performance, stylized Compose Canvas vector map featuring fluid vehicle movement, route polylines, pickup/drop-off pins, neighborhood grid landmarks, and real-time proximity calculations.
+> The primary reason the app may appear "not working" is:
+> 1. **Initial Startup State**: The app currently defaults to `_isAuthenticated = false`, trapping the user on a credential entry form on launch instead of displaying the live map, vehicle telemetry, and booking interface immediately.
+> 2. **GitHub Actions Scaffolding Conflict**: A newly added `.github/workflows/blank.yml` attempts to dynamically scaffold an empty, separate `com.example.autopulse` app via inline bash scripts instead of building the existing, fully working `Pollachi AutoGo` codebase in the repository.
+> 
+> **Proposed Fix Strategy**:
+> - **Immediate Active Screen on Launch**: Default `_isAuthenticated = true` with a pre-configured Rider session so launching the app immediately displays the interactive Pollachi map, moving autos, fare cards, and the Rider/Driver view switcher.
+> - **Instant View Switcher**: Keep the dedicated `RiderDriverViewSwitcher` visible at all times in the top bar to toggle between Rider and Driver views without reloading or recreating activities.
+> - **Seamless Account & Auth Access**: Allow switching between Rider, Driver, and Split Registration screens at any time via the profile/logout button in the top bar.
+> - **Standardized GitHub Actions Workflow**: Align `.github/workflows/blank.yml` to build the actual Android project directly (`gradle assembleDebug`) instead of generating throwaway placeholder files.
 
 ***
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: AutoGo connects city commuters with local auto-rickshaw and taxi drivers instantly. Riders can select pickup and drop-off points on an interactive map, view upfront transparent fares across vehicle categories, request a ride with instant driver matching, track the vehicle in real time with animated route telemetry, pay safely via preferred digital or cash channels, and rate the trip. Drivers can switch to the Driver Console to manage ride requests, accept bookings, verify rider OTPs, and track daily earnings.
-- **Target Audience / Persona**: Daily city commuters, students, office workers needing quick auto/cab transport, and local auto & cab drivers seeking steady on-demand trip bookings.
-- **Key Value**: Eliminates bargaining and street hailing uncertainty with transparent per-km fares, live driver arrival countdowns, passenger safety features (SOS, OTP verification), and flexible payment choices.
+- **What It Does**: Pollachi AutoGo is an on-demand local ride-hailing and auto dispatch application tailored for Pollachi, Tamil Nadu. It provides a unified single-app experience for both passengers (Riders) and auto rickshaw drivers (Drivers).
+  - **Rider Experience**: Live interactive vector map with ambient nearby autos, preset Pollachi transit landmarks (New Bus Stand, Railway Station, Daily Market, Mahalingapuram), upfront fare estimation across vehicle types (Pollachi Auto, Green EV, Town Cab, Bike Taxi), booking ring alerts, driver photo & plate tracking, and trip safety OTP verification.
+  - **Driver Console**: Duty toggle (Online/Offline), incoming job alerts with countdown and ring sound, passenger pickup navigation, OTP validation, and daily earnings dashboard with vehicle document verification (RC, Insurance, License for JOHNS KHAN).
+- **Target Audience**: Pollachi commuters, college students, shoppers, and local auto drivers based at Pollachi auto stands.
+- **Key Value**: Immediate, zero-friction startup showing real vehicles and transparent local fares, with fluid role switching between Rider and Driver.
 
 ***
 
@@ -28,147 +34,94 @@ An on-demand local urban transport Android app featuring real-time driver tracki
 ### Key User Flows
 
 ```
-[PASSENGER FLOW]
-Browse Map & Nearby Autos ─► Set Pickup/Drop-off ─► Compare Fleet & Fares (Auto/Cab/Bike) 
-  ─► Select Payment Method ─► Request Ride ─► Driver Assigned & Live Tracking (ETA + Route)
-  ─► OTP Verification & In-Ride Telemetry ─► Arrive & Instant Receipt ─► 5-Star Rating & Driver Tip
-
-[DRIVER CONSOLE FLOW]
-Go Online (Radar Active) ─► Incoming Trip Dispatch (15s Timer) ─► Accept Booking 
-  ─► Navigate to Pickup ─► Input Passenger OTP ─► Start Trip & Route Tracking 
-  ─► Complete Ride ─► Collect Fare ─► View Daily Earnings & Ratings
+┌────────────────────────────────────────────────────────────────────────┐
+│                        APP LAUNCH (DEFAULT)                           │
+│              Direct Entry: Interactive Rider Map View                  │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+         ┌─────────────────────────┴─────────────────────────┐
+         ▼                                                   ▼
+┌────────────────────────────────┐         ┌────────────────────────────────┐
+│       RIDER SCREEN (HOME)      │         │     DRIVER CONSOLE SCREEN      │
+│  - Live Interactive Map        │◄───────►│  - Duty Switch (Online/Offline)│
+│  - Moving Autos & Route Lines  │ Toggle  │  - Incoming Job Ring Alert     │
+│  - Fare Card (Auto, EV, Cab)   │ Switcher│  - Customer Pickup Telemetry   │
+│  - Booking & OTP Generation    │         │  - Trip OTP Verification       │
+└────────────────────────────────┘         └────────────────────────────────┘
+                 │                                           │
+                 └─────────────────┬─────────────────────────┘
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                 OPTIONAL: SPLIT LOGIN & REGISTRATION                   │
+│   Accessible via "Account / Role" icon in Top App Bar at any time     │
+│   - Rider Credentials Entry                                            │
+│   - Driver Vehicle & Document Registration (RC, Insurance, License)   │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Explore & Destination Selection**:
-   - Dynamic map view showcasing active nearby autos and cabs moving in the vicinity.
-   - Quick search bar with popular shortcuts ("Metro Station", "Tech Park", "City Center", "Home", "Work").
-   - Pickup location auto-detection with interactive pin adjustment.
-
-2. **Fleet Comparison & Fare Estimation**:
-   - Tiered ride selector cards:
-     - **Auto Standard**: Traditional 3-seater auto, fastest in heavy traffic, budget friendly.
-     - **Auto Electric**: Eco-friendly green auto, smooth & quiet ride.
-     - **Cab Mini / Sedan**: AC comfort, spacious luggage capacity.
-     - **Bike Taxi**: Single passenger express, ideal for solo commuters.
-   - Transparent price calculation showing base fare, distance rate, estimated travel time, and discount voucher support.
-
-3. **Live Booking & Real-Time Tracking**:
-   - Matching screen showing pulsating radar search for nearby drivers.
-   - Driver confirmation card displaying driver name, photo avatar, rating badge, vehicle model, plate number, and one-tap call/message action.
-   - 4-digit Ride Safety PIN / OTP for trip start verification.
-   - Real-time animated vehicle progress along the plotted route with dynamic ETA countdown.
-   - Emergency SOS floating button with instant share-trip and helpline access.
-
-4. **Payments & Checkout**:
-   - One-tap payment method switcher:
-     - **UPI**: Direct simulation of UPI payment apps (GPay, PhonePe, Paytm) and dynamic QR code generation.
-     - **Card**: Saved cards with secure CVV authorization.
-     - **AutoGo Wallet**: Stored balance with instant debit and top-up option.
-     - **Cash**: Direct cash payment to driver marked upon arrival.
-   - Itemized digital invoice with trip fare, taxes, and applied promos.
-
-5. **Driver Rating & Review System**:
-   - Post-trip modal with interactive 5-star rating bar.
-   - Quick compliment chips: *"Polite Driver"*, *"Clean Auto"*, *"Smooth Driving"*, *"Quickest Route"*.
-   - Optional tip selector ($10 / $20 / $50 / Custom).
-   - Written review feedback field saved directly to driver records.
-
-6. **Driver Partner Console**:
-   - Online/Offline toggle with active duty status pill.
-   - Incoming request modal with 15-second countdown circular timer, passenger distance, pickup address, and estimated payout.
-   - Step-by-step trip progression: "At Pickup" -> "Enter OTP" -> "Trip in Progress" -> "Trip Completed".
-   - Shift summary dashboard: Today's Earnings, Trips Completed, Acceptance Rate, and Driver Rating.
-
 ### Visual Identity & Theme
-
-- **Aesthetic Direction**: Urban Mobility Neo-Modern — sleek dark asphalt surfaces paired with vibrant **Electric Amber / Auto Yellow (`#FFB300` / `#FFC107`)** and **Emerald Green (`#10B981`)** accents inspired by classic auto-rickshaw styling and urban transit signages.
-- **Color Palette**:
-  - `Primary`: Auto Saffron / Amber Gold (`#FFA000`)
-  - `PrimaryContainer`: Warm Amber Glow (`#FFE082`)
-  - `Secondary`: Emerald Green (`#00897B`) for eco & confirm states
-  - `Surface`: Deep Midnight Slate (`#121820`) / Crisp Off-White (`#F8F9FA` in light theme)
-  - `SurfaceVariant`: Elevated card charcoal (`#1E2632`)
-  - `Accent`: Traffic Alert Coral (`#FF5252`) for SOS & cancellations
-- **Typography & Hierarchy**:
-  - Clean, legible geometric fonts with high-contrast numerals for ETAs, fares, and vehicle plates.
-  - Generous spacing for quick glanceability while on the move.
-- **Component Styling & Motion**:
-  - Custom vector canvas with smooth vehicle rotation and interpolation along waypoints.
-  - Floating bottom sheets with spring physics for fleet selection and driver telemetry.
-  - Pulsating radar waves during driver search and dispatch.
+- **Color Tokens**:
+  - **Auto Rickshaw Amber** (`#FFB300` / `#F57F17`): Primary brand color representing the iconic Indian auto rickshaw.
+  - **Eco Green** (`#00A86B`): Highlights driver online status, EV fleet options, and confirmed bookings.
+  - **Midnight Slate** (`#0F141C` / `#182230`): Rich dark theme background providing strong contrast for map tiles and telemetry.
+- **Typography**: Clean Material 3 typography with Tamil and English bilingual subtitles ("பொள்ளாச்சி மக்களின் உள்ளூர் ஆட்டோ").
+- **Motion & Transitions**:
+  - Seamless horizontal slide and fade transitions (`AnimatedContent`) between Rider and Driver screens using the shared ViewModel state.
+  - Pulsing radar wave animation during driver matching and ring alerts.
 
 ***
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Map Engine Strategy**:
-  - *Chosen Approach*: Rich custom Jetpack Compose Canvas vector map engine with street grid rendering, traffic congestion overlays, dynamic landmark icons, and smooth hardware-accelerated vehicle interpolation.
-  - *Why*: Delivers an immediate, zero-API-key-dependent, 60fps smooth simulation that works consistently out of the box without requiring external billing setup or Google Maps API key configuration, while preserving full interactive touch controls (pan, zoom, pin-drag).
-  - *Alternative Considered*: Standard Google Maps SDK; discarded because missing API keys in developer sandboxes cause blank gray screens and build crashes.
-- **Role Switching UX**:
-  - *Chosen Approach*: Prominent top-app-bar mode switch button ("Passenger App" vs. "Driver Console") that allows seamless toggling between passenger booking and driver job acceptance in real time.
-  - *Why*: Gives users and testers the complete end-to-end transportation ecosystem in one unified app without needing two separate APK installations.
-- **Data Persistence**:
-  - *Chosen Approach*: Reactive StateFlow repository combined with Room database persistence for saved trips, favorite places, active wallet transactions, and driver ratings.
-  - *Why*: Ensures trips, user profile, wallet balance, and driver reviews persist reliably across app restarts.
+- **Decision 1: Default to Authenticated Rider Screen on App Open**
+  - *Chosen Approach*: Initialize `_isAuthenticated = true` in `AutoGoViewModel` with pre-filled default demo credentials (Karthik Subramanian, Pollachi New Bus Stand).
+  - *Why*: Prevents new users from seeing an empty login hurdle or wondering why the map isn't showing. Users immediately experience the working app features.
+  - *Alternative Considered*: Showing split login every time app opens. Rejected because it led to the perception that the app is stuck or "not working".
+
+- **Decision 2: Single-Activity In-Memory View Switcher**
+  - *Chosen Approach*: Shared `AutoGoViewModel` drives `currentMode` (`PASSENGER` vs `DRIVER_CONSOLE`) rendered through Jetpack Compose `AnimatedContent` inside `MainActivity`.
+  - *Why*: Eliminates Android Activity lifecycle overhead, maintains state (active ride, driver duty, wallet, coordinates) across switches, and fulfills the explicit requirement of not creating new activities.
+
+- **Decision 3: Harmonize GitHub Actions Workflow**
+  - *Chosen Approach*: Replace the ad-hoc inline bash script in `.github/workflows/blank.yml` with a clean, standard Gradle build step that builds the actual project (`gradle :app:assembleDebug`).
+  - *Why*: Ensures GitHub CI/CD exports the actual, functional Pollachi AutoGo APK rather than failing or building a hollow template.
 
 ***
 
 ## 4. Technical Architecture & Data Strategy
 
+### Component & State Architecture
+
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                              AutoGo App                                │
-└────────────────────────────────────────────────────────────────────────┘
-                                    │
-           ┌────────────────────────┴────────────────────────┐
-           ▼                                                 ▼
-┌───────────────────────┐                         ┌──────────────────────┐
-│    Passenger Mode     │                         │    Driver Console    │
-│  - Interactive Map    │                         │  - Duty Radar Status │
-│  - Ride Category Tray │                         │  - Dispatch Incoming │
-│  - Ride Tracking Sheet│                         │  - OTP Verification  │
-│  - Payment Sheet      │                         │  - Trip Nav Progress │
-│  - Rating & Tip Modal │                         │  - Daily Earnings    │
-└───────────────────────┘                         └──────────────────────┘
-           │                                                 │
-           └────────────────────────┬────────────────────────┘
-                                    ▼
+│                              MainActivity                              │
+│                    (Single Android ComponentActivity)                  │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        AutoGoViewModel (MVI/MVVM)                      │
-│   - Screen State & Active Ride State Flow                              │
-│   - Fleet & Pricing Calculator (Autos, Cabs, Bikes)                    │
-│   - Real-time Driver Tracker & Route Telemetry Simulator              │
-│   - Payment Processing & In-App Wallet Engine                          │
-│   - Rating Submission & Driver Reputation Calculator                  │
-└────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                    Repository & Persistence Layer                      │
-│   - RideRepository (Active & Historic Rides, Saved Locations)          │
-│   - DriverRepository (Driver Pool, Real-time Positions, Status)       │
-│   - PaymentRepository (Wallet Balance, Card Stubs, UPI Intents)       │
-│   - Room Database (RidesDao, PlacesDao, TransactionsDao)               │
-└────────────────────────────────────────────────────────────────────────┘
+│                         AutoGoViewModel (Shared)                       │
+│  - currentMode: StateFlow<AppMode> (PASSENGER / DRIVER_CONSOLE)        │
+│  - isAuthenticated: StateFlow<Boolean> (defaults to true)             │
+│  - activeBooking: StateFlow<RideBooking?>                              │
+│  - nearbyDrivers: StateFlow<List<DriverProfile>>                       │
+│  - isDriverOnline: StateFlow<Boolean>                                  │
+│  - currentDriverProfile: StateFlow<DriverProfile?> (Johns Khan)        │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+         ┌─────────────────────────┴─────────────────────────┐
+         ▼                                                   ▼
+┌────────────────────────────────┐         ┌────────────────────────────────┐
+│      PassengerHomeScreen       │         │      DriverConsoleScreen       │
+│  - LiveInteractiveMap          │         │  - DriverDutyCard              │
+│  - SearchLocationSheet         │         │  - IncomingJobAlertCard        │
+│  - RideSelectionSheet          │         │  - OtpVerificationDialog       │
+│  - ActiveRideTrackingSheet     │         │  - VehicleRegistrationSheet    │
+└────────────────────────────────┘         └────────────────────────────────┘
 ```
 
-### Core Entities & Data Models
-
-- **`RideBooking`**: `id`, `pickupName`, `pickupLatLng`, `dropoffName`, `dropoffLatLng`, `rideType` (`AUTO_STANDARD`, `AUTO_ELECTRIC`, `CAB_MINI`, `BIKE_TAXI`), `fareAmount`, `distanceKm`, `status` (`SEARCHING`, `CONFIRMED`, `ARRIVING`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`), `safetyOtp`, `driverId`, `paymentMethod`, `paymentStatus`, `timestamp`.
-- **`DriverProfile`**: `id`, `name`, `rating`, `totalTrips`, `vehicleType`, `vehiclePlate`, `vehicleModel`, `avatarRes`, `phone`, `currentLatLng`, `isOnline`.
-- **`RideTypeOption`**: `type`, `displayName`, `tagline`, `baseFare`, `ratePerKm`, `estimatedMinutes`, `capacity`, `icon`.
-- **`PaymentMethod`**: `UPI`, `CARD`, `WALLET`, `CASH`.
-- **`TripRating`**: `tripId`, `driverId`, `stars`, `tags`, `tipAmount`, `feedbackComment`.
-- **`DriverEarnings`**: `todayTotal`, `tripsCount`, `onlineHours`, `acceptanceRate`.
-
-### Key User Interactions & State Transitions
-
-1. **Category Selection**: Updating selected vehicle type dynamically recalculates fare, estimated arrival time, and route route ETA.
-2. **Ride Request & Matching**:
-   - Triggers `SEARCHING` state with simulated dispatch to nearest available vehicle.
-   - Within 2-3 seconds, matches a driver, sets `CONFIRMED`, generates a unique 4-digit OTP, and triggers realistic waypoint motion along the path.
-3. **Trip Progress & Driver Console Sync**:
-   - When switching to Driver Console, the driver sees the pending trip request, can accept/decline, enter passenger OTP to verify pickup, and advance trip status to completion.
-4. **Checkout & Rating**:
-   - Selecting payment method processes mock transaction, deducts wallet balance if selected, produces invoice, and launches the review & rating dialog.
+### Proposed Changes:
+1. **`AutoGoViewModel.kt`**: Set `_isAuthenticated = MutableStateFlow(true)` so the app immediately displays the live interactive map and booking UI.
+2. **`MainActivity.kt`**: Confirm `AnimatedContent` view switcher responds immediately to `currentMode`.
+3. **`.github/workflows/blank.yml`**: Update workflow to build the repository's native Gradle project directly for APK artifacts.
+4. **Verification**: Run `compile_applet` and `gradle :app:testDebugUnitTest` to guarantee all tests pass.
