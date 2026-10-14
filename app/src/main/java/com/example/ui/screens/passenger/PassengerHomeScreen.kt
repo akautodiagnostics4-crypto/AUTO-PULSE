@@ -55,6 +55,7 @@ fun PassengerHomeScreen(
     viewModel: AutoGoViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val userLocation by viewModel.userLocation.collectAsState()
     val selectedDropoff by viewModel.selectedDropoff.collectAsState()
     val selectedRideType by viewModel.selectedRideType.collectAsState()
@@ -158,7 +159,7 @@ fun PassengerHomeScreen(
                         onSelectType = { viewModel.selectRideType(it) },
                         onOpenSearch = { viewModel.openSearchSheet() },
                         onApplyPromo = { viewModel.setPromoCode(it) },
-                        onRequestRide = { viewModel.requestRide() }
+                        onRequestRide = { viewModel.requestRide(context) }
                     )
                 }
 
@@ -175,7 +176,7 @@ fun PassengerHomeScreen(
                                 onSelectType = { viewModel.selectRideType(it) },
                                 onOpenSearch = { viewModel.openSearchSheet() },
                                 onApplyPromo = { viewModel.setPromoCode(it) },
-                                onRequestRide = { viewModel.requestRide() }
+                                onRequestRide = { viewModel.requestRide(context) }
                             )
                         }
 

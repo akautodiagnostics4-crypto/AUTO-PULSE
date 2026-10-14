@@ -83,4 +83,85 @@ class ExampleRobolectricTest {
     assertEquals("15 Aug 2028", updatedProfile.insuranceValidity)
     assertEquals("Pollachi New Bus Stand", updatedProfile.standLocation)
   }
+
+  @Test
+  fun `verify split auth screen rider credential collection and login`() {
+    val viewModel = com.example.viewmodel.AutoGoViewModel()
+    // Initially unauthenticated -> lands on SplitAuthScreen
+    assertEquals(false, viewModel.isAuthenticated.value)
+
+    viewModel.loginAsRider(
+      name = "Suresh Raina",
+      phone = "98421 99887",
+      pickupLocation = "Mahalingapuram Roundana"
+    )
+
+    assertEquals(true, viewModel.isAuthenticated.value)
+    assertEquals(com.example.model.AppMode.PASSENGER, viewModel.currentMode.value)
+    val rider = viewModel.currentRiderProfile.value
+    assertEquals("Suresh Raina", rider.name)
+    assertEquals("98421 99887", rider.phone)
+
+    // Logout returns to split screen
+    viewModel.logout()
+    assertEquals(false, viewModel.isAuthenticated.value)
+  }
+
+  @Test
+  fun `verify split auth screen driver registration with documents`() {
+    val viewModel = com.example.viewmodel.AutoGoViewModel()
+    val driverReg = com.example.model.DriverVehicleRegistration(
+      driverName = "JOHNS KHAN",
+      phone = "90800 40503",
+      vehicleType = RideType.AUTO_STANDARD,
+      vehiclePlate = "TN 41 AB 4821",
+      vehicleModel = "Bajaj RE Auto (Pollachi Town)",
+      rcNumber = "RC-TN41-89302-K",
+      rcDocumentAttached = true,
+      insuranceValidity = "31 Dec 2027",
+      insuranceDocumentAttached = true,
+      licenseNumber = "TN41 20180004921",
+      licenseDocumentAttached = true,
+      standLocation = "Pollachi Town Auto Stand"
+    )
+
+    viewModel.loginOrRegisterAsDriver(driverReg)
+
+    assertEquals(true, viewModel.isAuthenticated.value)
+    assertEquals(com.example.model.AppMode.DRIVER_CONSOLE, viewModel.currentMode.value)
+    assertEquals(true, viewModel.isDriverDocumentsComplete.value)
+
+    val profile = viewModel.currentDriverProfile.value
+    assertNotNull(profile)
+    assertEquals("JOHNS KHAN", profile!!.name)
+    assertEquals("+91 90800 40503", profile.phone)
+    assertEquals("TN 41 AB 4821", profile.vehiclePlate)
+    assertEquals(true, profile.isDocumentsVerified)
+    assertEquals(true, profile.rcDocumentAttached)
+    assertEquals(true, profile.insuranceDocumentAttached)
+  }
+
+  @Test
+  fun `verify view switcher toggling between Rider and Driver using shared ViewModel state`() {
+    val viewModel = com.example.viewmodel.AutoGoViewModel()
+    // Login as Rider first
+    viewModel.quickDemoRider()
+    assertEquals(com.example.model.AppMode.PASSENGER, viewModel.currentMode.value)
+
+    // Switch to Driver view using shared ViewModel state
+    viewModel.switchMode(com.example.model.AppMode.DRIVER_CONSOLE)
+    assertEquals(com.example.model.AppMode.DRIVER_CONSOLE, viewModel.currentMode.value)
+
+    // Toggle back to Rider view using shared ViewModel toggleMode
+    viewModel.toggleMode()
+    assertEquals(com.example.model.AppMode.PASSENGER, viewModel.currentMode.value)
+
+    // Toggle once more to Driver view
+    viewModel.toggleMode()
+    assertEquals(com.example.model.AppMode.DRIVER_CONSOLE, viewModel.currentMode.value)
+
+    // Verify repository and booking state are shared across both views
+    assertNotNull(viewModel.nearbyDrivers.value)
+    assertTrue(viewModel.nearbyDrivers.value.isNotEmpty())
+  }
 }

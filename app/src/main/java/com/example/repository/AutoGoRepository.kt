@@ -71,6 +71,15 @@ class AutoGoRepository {
     private val _currentDriverProfile = MutableStateFlow<DriverProfile?>(null)
     val currentDriverProfile: StateFlow<DriverProfile?> = _currentDriverProfile.asStateFlow()
 
+    private val _currentRiderProfile = MutableStateFlow(
+        com.example.model.RiderProfile(
+            name = "Karthik Subramanian",
+            phone = "+91 98421 55678",
+            defaultLocation = "Pollachi New Bus Stand"
+        )
+    )
+    val currentRiderProfile: StateFlow<com.example.model.RiderProfile> = _currentRiderProfile.asStateFlow()
+
     private val _driverStats = MutableStateFlow(DriverStats())
     val driverStats: StateFlow<DriverStats> = _driverStats.asStateFlow()
 
@@ -457,17 +466,35 @@ class AutoGoRepository {
         val current = _currentDriverProfile.value ?: _nearbyDrivers.value.first()
         val updated = current.copy(
             name = reg.driverName.ifBlank { current.name },
-            phone = reg.phone.ifBlank { current.phone },
+            phone = if (reg.phone.isNotBlank()) {
+                val clean = reg.phone.trim().removePrefix("+91").trim()
+                "+91 $clean"
+            } else current.phone,
             vehicleType = reg.vehicleType,
             vehiclePlate = reg.vehiclePlate.trim().uppercase(),
             vehicleModel = reg.vehicleModel.ifBlank { current.vehicleModel },
+            rcNumber = reg.rcNumber.ifBlank { current.rcNumber },
+            rcDocumentAttached = reg.rcDocumentAttached,
             insuranceValidity = reg.insuranceValidity,
+            insuranceDocumentAttached = reg.insuranceDocumentAttached,
             licenseNumber = reg.licenseNumber.ifBlank { current.licenseNumber },
+            licenseDocumentAttached = reg.licenseDocumentAttached,
+            isDocumentsVerified = true,
             standLocation = reg.standLocation
         )
         _currentDriverProfile.value = updated
         _nearbyDrivers.value = _nearbyDrivers.value.map {
             if (it.id == updated.id) updated else it
         }
+    }
+
+    fun updateRiderProfile(name: String, phone: String, location: String = "Pollachi New Bus Stand") {
+        val loc = presetLocations.find { it.name.contains(location, ignoreCase = true) } ?: presetLocations[0]
+        _userLocation.value = loc
+        _currentRiderProfile.value = _currentRiderProfile.value.copy(
+            name = name.ifBlank { "Pollachi Commuter" },
+            phone = phone.ifBlank { "+91 98421 55678" },
+            defaultLocation = loc.name
+        )
     }
 }

@@ -1,0 +1,90 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Background Badge -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+
+    <!-- Dark Contrast Inner Ring -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M20,6 L76,6 A14,14 0 0,1 90,20 L90,76 A14,14 0 0,1 76,90 L20,90 A14,14 0 0,1 6,76 L6,20 A14,14 0 0,1 20,6 Z" />
+
+    <!-- Green Horizon representing Pollachi lush greens -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M6,64 L90,64 L90,76 A14,14 0 0,1 76,90 L20,90 A14,14 0 0,1 6,76 Z" />
+
+    <!-- Road Track -->
+    <path
+        android:fillColor="#334155"
+        android:pathData="M14,70 L82,70 L78,82 L18,82 Z" />
+
+    <!-- Yellow Road Line -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M38,75 L58,75 L57,77 L39,77 Z" />
+
+    <!-- Iconic Auto Rickshaw Hood (Yellow Canopy) -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M24,38 C28,26 40,24 64,24 C72,24 76,26 80,32 L82,42 C82,44 80,45 77,45 L22,45 C20,45 20,43 24,38 Z" />
+
+    <!-- Windshield -->
+    <path
+        android:fillColor="#E0F2FE"
+        android:pathData="M64,27 L74,33 L72,42 L60,42 Z" />
+
+    <!-- Driver cabin divider -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M58,26 L60,26 L60,44 L58,44 Z" />
+
+    <!-- Passenger Window opening -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M30,28 L54,28 L54,43 L28,43 Z" />
+
+    <!-- Lower Body (Green / Black auto body) -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M22,45 L78,45 L82,56 C82,58 80,60 76,60 L24,60 C20,60 18,57 22,45 Z" />
+
+    <!-- Headlight beam -->
+    <path
+        android:fillColor="#FEF08A"
+        android:pathData="M81,51 L89,48 L89,55 L81,54 Z" />
+
+    <!-- Headlight lens -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,50 A3,3 0 1,1 78,54 A3,3 0 1,1 78,50" />
+
+    <!-- Back Wheel -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M29,60 A7,7 0 1,1 29,74 A7,7 0 1,1 29,60" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M29,64 A3,3 0 1,1 29,70 A3,3 0 1,1 29,64" />
+
+    <!-- Front Wheel -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M73,60 A7,7 0 1,1 73,74 A7,7 0 1,1 73,60" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M73,64 A3,3 0 1,1 73,70 A3,3 0 1,1 73,64" />
+
+    <!-- Speed Sparks -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M12,48 L18,48 L16,50 L10,50 Z" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M8,54 L16,54 L14,56 L6,56 Z" />
+</vector>

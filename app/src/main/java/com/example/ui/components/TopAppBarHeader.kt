@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TwoWheeler
@@ -41,9 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.AppMode
 import com.example.ui.theme.AmberDark
 import com.example.ui.theme.AmberPrimary
@@ -56,6 +60,8 @@ fun TopAppBarHeader(
     onModeChange: (AppMode) -> Unit,
     onOpenWallet: () -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenRoleChooser: () -> Unit = {},
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -72,23 +78,22 @@ fun TopAppBarHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Brand Logo & Mode Title
+            // Brand Logo & Mode Title (clickable to choose role)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.testTag("brand_header")
+                modifier = Modifier
+                    .clickable { onOpenRoleChooser() }
+                    .testTag("brand_header")
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(AmberPrimary),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = AmberPrimary,
+                    modifier = Modifier.size(42.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = "AutoGo Logo",
-                        tint = Color(0xFF1E293B),
-                        modifier = Modifier.size(24.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_pollachi_auto_logo),
+                        contentDescription = "Pollachi AutoGo Logo",
+                        modifier = Modifier.size(42.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -249,37 +254,24 @@ fun TopAppBarHeader(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                // Mode Switcher Toggle Button
-                Card(
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (currentMode == AppMode.DRIVER_CONSOLE) EmeraldEco else AmberPrimary
-                    ),
-                    modifier = Modifier
-                        .clickable {
-                            val target = if (currentMode == AppMode.PASSENGER) AppMode.DRIVER_CONSOLE else AppMode.PASSENGER
-                            onModeChange(target)
-                        }
-                        .testTag("mode_switcher_toggle_btn")
+                // Shared ViewModel State View Switcher
+                RiderDriverViewSwitcher(
+                    currentMode = currentMode,
+                    onModeChange = onModeChange
+                )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                // Switch Account / Logout button to return to SplitAuthScreen
+                IconButton(
+                    onClick = onLogout,
+                    modifier = Modifier.testTag("top_bar_logout_btn")
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (currentMode == AppMode.PASSENGER) Icons.Default.TwoWheeler else Icons.Default.Person,
-                            contentDescription = "Switch Mode",
-                            tint = Color(0xFF111827),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (currentMode == AppMode.PASSENGER) "Switch to Driver" else "Switch to Rider",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF111827)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Switch Account / Logout",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

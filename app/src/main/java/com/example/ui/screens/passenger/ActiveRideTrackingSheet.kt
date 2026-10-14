@@ -227,102 +227,161 @@ fun ActiveRideTrackingSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Driver Card
+            // Driver Photo & Vehicle Plate Card (Customer View)
             val driver = booking.driver
             if (driver != null) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AmberPrimary.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = AmberPrimary.copy(alpha = 0.2f),
-                            modifier = Modifier.size(46.dp)
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(text = "👨🏽‍✈️", fontSize = 24.sp)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = driver.name,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Star,
-                                        contentDescription = "Rating",
-                                        tint = StarGold,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Text(
-                                        text = "${driver.rating}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                            // Driver Photo / Avatar
+                            Box(contentAlignment = Alignment.BottomEnd) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = AmberPrimary.copy(alpha = 0.25f),
+                                    border = androidx.compose.foundation.BorderStroke(2.dp, AmberPrimary),
+                                    modifier = Modifier.size(54.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(text = "👨🏽‍✈️", fontSize = 28.sp)
+                                    }
+                                }
+                                Surface(
+                                    shape = CircleShape,
+                                    color = EmeraldEco,
+                                    modifier = Modifier.size(18.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Shield,
+                                            contentDescription = "Verified",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(11.dp)
+                                        )
+                                    }
                                 }
                             }
 
-                            Text(
-                                text = "${driver.vehicleModel} • ${driver.vehiclePlate}",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = AmberPrimary
-                            )
-                            Text(
-                                text = "${driver.totalTrips} completed trips",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        // Call & Chat buttons
-                        Row {
-                            IconButton(
-                                onClick = { showCallDialog = true },
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(EmeraldEco.copy(alpha = 0.15f))
-                                    .testTag("driver_call_btn")
-                            ) {
-                                Icon(
-                                    Icons.Default.Call,
-                                    contentDescription = "Call Driver",
-                                    tint = EmeraldEco,
-                                    modifier = Modifier.size(18.dp)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = driver.name,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = "Rating",
+                                            tint = StarGold,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = "${driver.rating}",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "${driver.vehicleModel} • ${driver.standLocation}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Text(
+                                    text = "Verified Driver Partner • ${driver.totalTrips} trips",
+                                    fontSize = 11.sp,
+                                    color = EmeraldEco,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            IconButton(
-                                onClick = {
-                                    Toast.makeText(context, "Chat connected with ${driver.name}", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .testTag("driver_chat_btn")
+
+                            // Call & Chat buttons
+                            Row {
+                                IconButton(
+                                    onClick = { showCallDialog = true },
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(EmeraldEco.copy(alpha = 0.15f))
+                                        .testTag("driver_call_btn")
+                                ) {
+                                    Icon(
+                                        Icons.Default.Call,
+                                        contentDescription = "Call Driver",
+                                        tint = EmeraldEco,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Prominent Vehicle Registration Plate Badge
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF8FAFC),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF1E293B)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("vehicle_number_plate_badge")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Icon(
-                                    Icons.Default.Chat,
-                                    contentDescription = "Chat with Driver",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // IND Blue Strip
+                                    Surface(
+                                        shape = RoundedCornerShape(3.dp),
+                                        color = Color(0xFF1D4ED8),
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "IND",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = driver.vehiclePlate,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 18.sp,
+                                        letterSpacing = 2.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = AmberPrimary
+                                ) {
+                                    Text(
+                                        text = driver.vehicleType.displayName,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF1E293B),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                    )
+                                }
                             }
                         }
                     }

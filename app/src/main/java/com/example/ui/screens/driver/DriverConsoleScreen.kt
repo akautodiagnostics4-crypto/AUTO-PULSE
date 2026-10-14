@@ -53,6 +53,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +79,7 @@ import com.example.ui.theme.AmberDark
 import com.example.ui.theme.AmberPrimary
 import com.example.ui.theme.EmeraldEco
 import com.example.ui.theme.StarGold
+import com.example.util.SoundManager
 import com.example.viewmodel.AutoGoViewModel
 
 @Composable
@@ -95,6 +97,15 @@ fun DriverConsoleScreen(
     val otpError by viewModel.otpInputError.collectAsState()
 
     var enteredOtp by remember { mutableStateOf("") }
+
+    // Audio Ring sound and vibration whenever a ride is booked by customer
+    LaunchedEffect(incomingJob) {
+        if (incomingJob != null && isOnline) {
+            SoundManager.playRideBookingRingSound(context)
+        } else {
+            SoundManager.stopRingSound()
+        }
+    }
 
     Column(
         modifier = modifier

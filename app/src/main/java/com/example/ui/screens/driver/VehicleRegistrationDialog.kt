@@ -1,6 +1,8 @@
 package com.example.ui.screens.driver
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +21,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricRickshaw
 import androidx.compose.material.icons.filled.HealthAndSafety
@@ -29,6 +35,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.TwoWheeler
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,22 +78,28 @@ fun VehicleRegistrationDialog(
     onSaveRegistration: (DriverVehicleRegistration) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     var driverName by remember { mutableStateOf(currentProfile?.name ?: "JOHNS KHAN") }
-    var phone by remember { mutableStateOf(currentProfile?.phone ?: "+91 90800 40503") }
+    var phone by remember { mutableStateOf(currentProfile?.phone ?: "90800 40503") }
     var selectedVehicleType by remember { mutableStateOf(currentProfile?.vehicleType ?: RideType.AUTO_STANDARD) }
     var plateNumber by remember { mutableStateOf(currentProfile?.vehiclePlate ?: "TN 41 AB 4821") }
     var vehicleModel by remember { mutableStateOf(currentProfile?.vehicleModel ?: "Bajaj RE Auto") }
+    var rcNumber by remember { mutableStateOf(currentProfile?.rcNumber ?: "RC-TN41-89302-K") }
+    var rcAttached by remember { mutableStateOf(currentProfile?.rcDocumentAttached ?: true) }
     var insuranceValidity by remember { mutableStateOf(currentProfile?.insuranceValidity ?: "31 Dec 2027") }
+    var insuranceAttached by remember { mutableStateOf(currentProfile?.insuranceDocumentAttached ?: true) }
     var licenseNumber by remember { mutableStateOf(currentProfile?.licenseNumber ?: "TN41 20180004921") }
-    var selectedStand by remember { mutableStateOf(currentProfile?.standLocation ?: "Pollachi Town Auto Stand") }
+    var licenseAttached by remember { mutableStateOf(currentProfile?.licenseDocumentAttached ?: true) }
+    var selectedStand by remember { mutableStateOf(currentProfile?.standLocation ?: "Pollachi New Bus Stand") }
 
     var plateError by remember { mutableStateOf(false) }
 
     val pollachiStands = listOf(
-        "Pollachi Town Stand",
-        "New Bus Stand",
+        "Pollachi New Bus Stand",
+        "Town Auto Stand",
         "Railway Station Stand",
         "Mahalingapuram Stand",
+        "Daily Market Stand",
         "GH Hospital Stand"
     )
 
@@ -115,27 +129,28 @@ fun VehicleRegistrationDialog(
                         Surface(
                             shape = CircleShape,
                             color = AmberPrimary,
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(42.dp)
                         ) {
                             Box(
                                 modifier = Modifier.padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "🛺", fontSize = 20.sp)
+                                Text(text = "🛺", fontSize = 22.sp)
                             }
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Vehicle Registration",
+                                text = "Driver & Vehicle Onboarding",
                                 fontWeight = FontWeight.Black,
-                                fontSize = 17.sp,
+                                fontSize = 16.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "வாகன பதிவு • Pollachi AutoGo",
+                                text = "Pollachi Auto Partner Verification",
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AmberPrimary,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -145,13 +160,13 @@ fun VehicleRegistrationDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // 1. Vehicle Type Selector (Auto, Cab, Bike)
                 Text(
-                    text = "SELECT VEHICLE TYPE (வாகனம் வகை)",
+                    text = "1. SELECT VEHICLE TYPE (வாகனம் வகை)",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -181,14 +196,14 @@ fun VehicleRegistrationDialog(
                                 .weight(1f)
                                 .clickable {
                                     selectedVehicleType = type
-                                    if (type == RideType.AUTO_STANDARD && vehicleModel.isBlank()) {
+                                    if (type == RideType.AUTO_STANDARD && (vehicleModel.isBlank() || vehicleModel.contains("WagonR") || vehicleModel.contains("Activa"))) {
                                         vehicleModel = "Bajaj RE Auto"
                                     } else if (type == RideType.AUTO_ELECTRIC) {
                                         vehicleModel = "Mahindra Treo EV"
                                     } else if (type == RideType.CAB_MINI) {
-                                        vehicleModel = "WagonR AC"
+                                        vehicleModel = "WagonR AC Taxi"
                                     } else if (type == RideType.BIKE_TAXI) {
-                                        vehicleModel = "Honda Activa"
+                                        vehicleModel = "Honda Activa 6G"
                                     }
                                 }
                                 .testTag("select_vehicle_type_${type.name}")
@@ -207,9 +222,9 @@ fun VehicleRegistrationDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // 2. Vehicle Plate Number
+                // 2. Vehicle Plate Number & Model
                 Text(
-                    text = "VEHICLE PLATE NUMBER (வண்டி எண்)",
+                    text = "2. VEHICLE DETAILS & NUMBER PLATE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -228,7 +243,7 @@ fun VehicleRegistrationDialog(
                         Icon(Icons.Default.DirectionsCar, contentDescription = "Plate", tint = AmberPrimary)
                     },
                     supportingText = {
-                        Text("Pollachi RTO Code: TN 41 (e.g. TN 41 AB 4821)")
+                        Text("Pollachi RTO: TN 41 (e.g. TN 41 AB 4821)")
                     },
                     isError = plateError,
                     singleLine = true,
@@ -239,22 +254,12 @@ fun VehicleRegistrationDialog(
                         .testTag("vehicle_plate_input")
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 3. Vehicle Model / Brand
-                Text(
-                    text = "VEHICLE MODEL / MAKE",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = vehicleModel,
                     onValueChange = { vehicleModel = it },
-                    placeholder = { Text("e.g. Bajaj RE Compact, Piaggio Ape, Mahindra Treo") },
+                    placeholder = { Text("Vehicle Model (Bajaj RE / Mahindra Treo)") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AmberPrimary),
@@ -263,16 +268,16 @@ fun VehicleRegistrationDialog(
                         .testTag("vehicle_model_input")
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // 4. Insurance Validity Date & Status
+                // 3. Document 1: RC COPY (Registration Certificate)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "INSURANCE VALIDITY (காப்பீடு செல்லுபடி)",
+                        text = "3. RC BOOK COPY (பதிவு சான்றிதழ்)",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -280,15 +285,87 @@ fun VehicleRegistrationDialog(
 
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = EmeraldEco.copy(alpha = 0.15f)
+                        color = if (rcAttached) EmeraldEco.copy(alpha = 0.15f) else AmberPrimary.copy(alpha = 0.15f),
+                        modifier = Modifier.clickable { rcAttached = !rcAttached }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Shield, contentDescription = "Valid", tint = EmeraldEco, modifier = Modifier.size(12.dp))
+                            Icon(
+                                if (rcAttached) Icons.Default.CheckCircle else Icons.Default.UploadFile,
+                                contentDescription = "RC Status",
+                                tint = if (rcAttached) EmeraldEco else AmberDark,
+                                modifier = Modifier.size(12.dp)
+                            )
                             Spacer(modifier = Modifier.width(3.dp))
-                            Text(text = "Active", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = EmeraldEco)
+                            Text(
+                                text = if (rcAttached) "RC Copy Attached" else "Attach RC",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (rcAttached) EmeraldEco else AmberDark
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    value = rcNumber,
+                    onValueChange = { rcNumber = it.uppercase() },
+                    placeholder = { Text("e.g. RC-TN41-89302-K") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Description, contentDescription = "RC", tint = AmberPrimary)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            rcAttached = true
+                            Toast.makeText(context, "RC Document Uploaded & Verified", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(Icons.Default.UploadFile, contentDescription = "Upload RC", tint = EmeraldEco)
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AmberPrimary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("rc_number_input")
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 4. Document 2: Commercial Vehicle Insurance Validity
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "4. INSURANCE POLICY & VALIDITY (காப்பீடு)",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (insuranceAttached) EmeraldEco.copy(alpha = 0.15f) else AmberPrimary.copy(alpha = 0.15f),
+                        modifier = Modifier.clickable { insuranceAttached = !insuranceAttached }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Shield, contentDescription = "Insurance", tint = EmeraldEco, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = if (insuranceAttached) "Policy Verified" else "Attach Policy",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EmeraldEco
+                            )
                         }
                     }
                 }
@@ -302,8 +379,13 @@ fun VehicleRegistrationDialog(
                     leadingIcon = {
                         Icon(Icons.Default.HealthAndSafety, contentDescription = "Insurance", tint = EmeraldEco)
                     },
-                    supportingText = {
-                        Text("Mandatory for commercial transport safety in Pollachi")
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            insuranceAttached = true
+                            Toast.makeText(context, "Insurance Document Uploaded", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(Icons.Default.UploadFile, contentDescription = "Upload Insurance", tint = EmeraldEco)
+                        }
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -323,7 +405,10 @@ fun VehicleRegistrationDialog(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier
-                                .clickable { insuranceValidity = d }
+                                .clickable {
+                                    insuranceValidity = d
+                                    insuranceAttached = true
+                                }
                                 .padding(vertical = 2.dp)
                         ) {
                             Text(
@@ -337,11 +422,11 @@ fun VehicleRegistrationDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // 5. Driver Name & Contact
+                // 5. Driver Name & Contact (JOHNS KHAN / 90800 40503)
                 Text(
-                    text = "DRIVER PARTNER NAME & PHONE",
+                    text = "5. DRIVER PARTNER NAME & PHONE NUMBER",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -349,41 +434,44 @@ fun VehicleRegistrationDialog(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = driverName,
-                        onValueChange = { driverName = it },
-                        placeholder = { Text("Driver Name") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Person, contentDescription = "Name", tint = AmberPrimary)
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .testTag("driver_name_input")
-                    )
+                OutlinedTextField(
+                    value = driverName,
+                    onValueChange = { driverName = it },
+                    placeholder = { Text("Driver Name (JOHNS KHAN)") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = "Name", tint = AmberPrimary)
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("driver_name_input")
+                )
 
-                    OutlinedTextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        placeholder = { Text("Phone") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("driver_phone_input")
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    placeholder = { Text("Phone Number (90800 40503)") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Phone, contentDescription = "Phone", tint = AmberPrimary)
+                    },
+                    supportingText = {
+                        Text("Contact number for passengers to call: 90800 40503")
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("driver_phone_input")
+                )
 
-                // 6. Driving License / Badge Number
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 6. Driving License / Badge
                 Text(
-                    text = "DRIVING LICENSE / BADGE NUMBER",
+                    text = "6. DRIVING LICENSE / COMMERCIAL BADGE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -398,6 +486,14 @@ fun VehicleRegistrationDialog(
                     leadingIcon = {
                         Icon(Icons.Default.Badge, contentDescription = "License", tint = AmberPrimary)
                     },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            licenseAttached = true
+                            Toast.makeText(context, "Driving License Verified", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = "License verified", tint = EmeraldEco)
+                        }
+                    },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -405,11 +501,11 @@ fun VehicleRegistrationDialog(
                         .testTag("license_number_input")
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // 7. Preferred Pollachi Auto Stand
+                // 7. Preferred Pollachi Stand
                 Text(
-                    text = "PREFERRED POLLACHI AUTO STAND (ஆட்டோ ஸ்டாண்ட்)",
+                    text = "7. PREFERRED POLLACHI AUTO STAND (ஆட்டோ ஸ்டாண்ட்)",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -442,7 +538,29 @@ fun VehicleRegistrationDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Verification guarantee note
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = EmeraldEco.copy(alpha = 0.12f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Verified, contentDescription = "Verified Partner", tint = EmeraldEco, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Once submitted, your vehicle and documents (RC copy, Insurance, License) will be registered and activated as a Pollachi AutoGo Driver Partner.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Action Buttons
                 Row(
@@ -471,11 +589,16 @@ fun VehicleRegistrationDialog(
                                 vehicleType = selectedVehicleType,
                                 vehiclePlate = plateNumber,
                                 vehicleModel = vehicleModel,
+                                rcNumber = rcNumber,
+                                rcDocumentAttached = rcAttached,
                                 insuranceValidity = insuranceValidity,
+                                insuranceDocumentAttached = insuranceAttached,
                                 licenseNumber = licenseNumber,
+                                licenseDocumentAttached = licenseAttached,
                                 standLocation = selectedStand
                             )
                             onSaveRegistration(reg)
+                            Toast.makeText(context, "Registration Complete! You are now an active driver partner.", Toast.LENGTH_LONG).show()
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -483,13 +606,13 @@ fun VehicleRegistrationDialog(
                             contentColor = Color(0xFF1E293B)
                         ),
                         modifier = Modifier
-                            .weight(1.5f)
+                            .weight(1.6f)
                             .height(48.dp)
                             .testTag("save_vehicle_registration_btn")
                     ) {
                         Icon(Icons.Default.Verified, contentDescription = "Save", modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Save & Register", fontWeight = FontWeight.Bold)
+                        Text("Complete & Be Part of App", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
